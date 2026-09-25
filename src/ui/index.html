@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusCRDT // Distributed Real-Time Collaborative Canvas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #09090b;
+      color: #fafafa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      user-select: none;
+    }
+    header {
+      height: 52px;
+      background: #18181b;
+      border-bottom: 1px solid #27272a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 10;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 15px;
+    }
+    .logo-badge {
+      background: #3b82f6;
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: monospace;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #27272a;
+      padding: 4px;
+      border-radius: 8px;
+    }
+    .tool-btn {
+      background: transparent;
+      border: none;
+      color: #a1a1aa;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .tool-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .tool-btn.active {
+      color: #ffffff;
+      background: #3b82f6;
+    }
+    .status-panel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      font-family: monospace;
+      color: #a1a1aa;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+    }
+    #viewport {
+      flex: 1;
+      position: relative;
+      background: #09090b;
+      cursor: crosshair;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .peer-hud {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(24, 24, 27, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-family: monospace;
+      line-height: 1.6;
+      pointer-events: none;
+    }
+    .peer-hud strong {
+      color: #60a5fa;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span>NEXUS // CRDT</span>
+      <span class="logo-badge">SEC LWW-ENGINE</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn active" data-tool="rectangle">? Rectangle</button>
+      <button class="tool-btn" data-tool="ellipse">? Ellipse</button>
+      <button class="tool-btn" data-tool="arrow">? Arrow</button>
+      <button class="tool-btn" data-tool="text">T Text</button>
+      <button class="tool-btn" id="simulate-peer">? Spawn Peer Bot</button>
+      <button class="tool-btn" id="clear-canvas">?? Clear</button>
+    </div>
+
+    <div class="status-panel">
+      <div class="status-dot"></div>
+      <span id="conn-state">CRDT MESH: OPERATIONAL</span>
+      <span>| Lamport: <span id="lamport-clock">0</span></span>
+      <span>| Shapes: <span id="shape-count">0</span></span>
+    </div>
+  </header>
+
+  <div id="viewport">
+    <canvas id="canvas"></canvas>
+    <div class="peer-hud">
+      <div><strong>Convergence:</strong> Strong Eventual Consistency (SEC)</div>
+      <div><strong>Conflict Resolution:</strong> Lamport Timestamp + Peer ID LWW</div>
+      <div><strong>Causal Graph:</strong> Monotonic Vector Clock Invariant</div>
+      <div><strong>Peers Connected:</strong> <span id="active-peers">1 (Local)</span></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { CRDTCanvasDocument } from './core/crdt.js';
+    import { CanvasRenderer } from './core/canvas.js';
+
+    const canvas = document.getElementById('canvas');
+    const shapeCountEl = document.getElementById('shape-count');
+    const lamportClockEl = document.getElementById('lamport-clock');
+    const activePeersEl = document.getElementById('active-peers');
+
+    function resize() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const renderer = new CanvasRenderer(canvas);
+    const peerId = 'peer-' + Math.random().toString(36).substring(2, 7);
+    const doc = new CRDTCanvasDocument(peerId);
+
+    let activeTool = 'rectangle';
+    document.querySelectorAll('[data-tool]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('[data-tool]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTool = btn.dataset.tool;
+      });
+    });
+
+    let isDrawing = false;
+    let startX = 0, startY = 0;
+    let currentShapeId = null;
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      const world = renderer.screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+      startX = world.x;
+      startY = world.y;
+      currentShapeId = 'shape-' + Date.now();
+
+      doc.createOrUpdateShape({
+        id: currentShapeId,
+        type: activeTool,
+        x: startX,
+        y: startY,
+        width: 1,
+        height: 1,
+        strokeColor: '#38bdf8',
+        fillColor: 'rgba(56, 189, 248, 0.15)'
+      });
+      render();
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing || !currentShapeId) return;
+      const rect = canvas.getBoundingClientRect();
+      const world = renderer.screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+      const w = world.x - startX;
+      const h = world.y - startY;
+
+      doc.createOrUpdateShape({
+        id: currentShapeId,
+        x: w >= 0 ? startX : world.x,
+        y: h >= 0 ? startY : world.y,
+        width: Math.abs(w),
+        height: Math.abs(h)
+      });
+      render();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDrawing = false;
+      currentShapeId = null;
+    });
+
+    // Simulated Peer Bot to showcase autonomous concurrent multi-client CRDT convergence
+    let peerCount = 1;
+    document.getElementById('simulate-peer').addEventListener('click', () => {
+      peerCount++;
+      activePeersEl.textContent = `${peerCount} Peers`;
+      const botId = `bot-${Math.random().toString(36).substring(2, 6)}`;
+      const botDoc = new CRDTCanvasDocument(botId);
+
+      const botColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+
+      setInterval(() => {
+        const shapeId = 'bot-shape-' + Math.floor(Math.random() * 5);
+        const delta = botDoc.createOrUpdateShape({
+          id: shapeId,
+          type: ['rectangle', 'ellipse'][Math.floor(Math.random() * 2)],
+          x: 100 + Math.random() * (canvas.width - 300),
+          y: 100 + Math.random() * (canvas.height - 300),
+          width: 80 + Math.random() * 100,
+          height: 60 + Math.random() * 80,
+          strokeColor: botColor,
+          fillColor: botColor + '22'
+        });
+
+        // Simulate network transmit to local client doc
+        doc.applyRemoteDelta(delta);
+
+        // Update bot cursor
+        renderer.updateCursor({
+          peerId: botId,
+          name: botId.toUpperCase(),
+          color: botColor,
+          worldX: delta.payload.x + 40,
+          worldY: delta.payload.y + 40,
+          lastActive: Date.now()
+        });
+        render();
+      }, 1200);
+    });
+
+    document.getElementById('clear-canvas').addEventListener('click', () => {
+      for (const shape of doc.getActiveShapes()) {
+        doc.deleteShape(shape.id);
+      }
+      render();
+    });
+
+    function render() {
+      const shapes = doc.getActiveShapes();
+      renderer.render(shapes);
+      shapeCountEl.textContent = shapes.length;
+      lamportClockEl.textContent = doc.getLamportTime();
+      requestAnimationFrame(render);
+    }
+    render();
+  </script>
+</body>
+</html>
