@@ -38,4 +38,12 @@ export class SelectionManager {
         s.y + s.height <= lasso.y + lasso.height
     );
   }
+
+  public static translateGroup(shapes: CanvasShape[], dx: number, dy: number): CanvasShape[] {
+    return shapes.map((s) => ({
+      ...s,
+      x: s.x + dx,
+      y: s.y + dy,
+    }));
+  }
 }
