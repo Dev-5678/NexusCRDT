@@ -42,3 +42,15 @@ export class ICEManager {
     };
   }
 }
+
+export class HybridTransportCoordinator {
+  private mode: 'WEBSOCKET' | 'WEBRTC' = 'WEBSOCKET';
+
+  public setMode(mode: 'WEBSOCKET' | 'WEBRTC'): void {
+    this.mode = mode;
+  }
+
+  public getMode(): 'WEBSOCKET' | 'WEBRTC' {
+    return this.mode;
+  }
+}
