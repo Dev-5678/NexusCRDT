@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "node --test dist/tests/*.js",
+    "test": "node --test dist/tests",
     "benchmark": "node dist/benchmark/sync-benchmark.js",
     "start": "node dist/src/network/server.js"
   },

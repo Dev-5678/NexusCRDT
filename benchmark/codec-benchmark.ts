@@ -21,8 +21,8 @@ function benchmarkCodec() {
   const t1 = performance.now();
   const opsSec = Math.floor((ITERATIONS / ((t1 - t0) / 1000)));
 
-  console.log(Executed  roundtrip encode/decodes in  ms);
-  console.log(Throughput:  ops/sec\n);
+  console.log('Executed ' + ITERATIONS + ' roundtrip encode/decodes in ' + (t1 - t0).toFixed(2) + ' ms');
+  console.log('Throughput: ' + opsSec.toLocaleString() + ' ops/sec\n');
 }
 
 benchmarkCodec();
