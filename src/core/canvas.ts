@@ -46,6 +46,28 @@ export class CanvasRenderer {
     return { ...this.transform };
   }
 
+  /**
+   * Scale the viewport anchored around a specific screen coordinate (pinch-to-zoom / wheel zoom)
+   */
+  public zoomAtPoint(focalScreenX: number, focalScreenY: number, factor: number): void {
+    const minScale = 0.1;
+    const maxScale = 10.0;
+    const newScale = Math.max(minScale, Math.min(maxScale, this.transform.scale * factor));
+    const effectiveFactor = newScale / this.transform.scale;
+
+    this.transform.offsetX = focalScreenX - (focalScreenX - this.transform.offsetX) * effectiveFactor;
+    this.transform.offsetY = focalScreenY - (focalScreenY - this.transform.offsetY) * effectiveFactor;
+    this.transform.scale = newScale;
+  }
+
+  /**
+   * Pan the viewport by screen pixel delta offsets
+   */
+  public pan(deltaScreenX: number, deltaScreenY: number): void {
+    this.transform.offsetX += deltaScreenX;
+    this.transform.offsetY += deltaScreenY;
+  }
+
   public setSelectedShape(id: string | null): void {
     this.selectedShapeId = id;
   }
