@@ -142,3 +142,7 @@ Licensed under the [MIT License](LICENSE).
 - **Branching Causal History DAG:** Enables non-destructive undo/redo across collaborative peers without diverging document state semilattices.
 - **Run-Length Wire Compression:** Achieves 38% reduction in network packet overhead for streaming freeform strokes.
 - **WebRTC DataChannel Mesh:** Direct peer-to-peer binary frame synchronization bypassing relay servers when direct connectivity is established.
+- **Spatial Geometry & Bounding Box Engine:** Axis-aligned bounding box (AABB) intersection tests, multi-shape lasso selection containment, and ellipse collision queries.
+- **Focal Point Viewport Transforms:** Seamless pinch-to-zoom and pan transformations preserving invariant world coordinates under user focal anchors.
+- **Mesh Node Eviction & Heartbeat Decay:** Autonomous tracking of active peer heartbeats with deterministic eviction of stale peers during network partition events.
+
