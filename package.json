@@ -1,0 +1,32 @@
+{
+  "name": "nexus-crdt",
+  "version": "1.0.0",
+  "description": "High-Performance Distributed Real-Time Collaborative Canvas Engine using Conflict-Free Replicated Data Types (CRDTs)",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/*.js",
+    "benchmark": "node dist/benchmark/sync-benchmark.js",
+    "start": "node dist/src/network/server.js"
+  },
+  "keywords": [
+    "crdt",
+    "distributed-systems",
+    "real-time",
+    "collaborative-canvas",
+    "vector-clock",
+    "websockets",
+    "concurrency",
+    "typescript"
+  ],
+  "author": "Dev Jangid <https://github.com/Dev-5678>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.5.10",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}
