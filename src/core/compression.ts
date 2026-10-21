@@ -38,3 +38,11 @@ export class DeltaCompressionCodec {
     };
   }
 }
+
+export class CompressionTelemetry {
+  public static calculateRatio(original: DeltaOperation, compressed: CompressedDeltaPayload): number {
+    const origBytes = Buffer.byteLength(JSON.stringify(original));
+    const compBytes = Buffer.byteLength(JSON.stringify(compressed));
+    return Number((1 - compBytes / origBytes).toFixed(4));
+  }
+}
