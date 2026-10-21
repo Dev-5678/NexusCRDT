@@ -31,3 +31,14 @@ export class WebRTCDataChannelAdapter {
     }
   }
 }
+
+export class ICEManager {
+  public static createIceConfig(): any {
+    return {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+      ],
+    };
+  }
+}
