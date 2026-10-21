@@ -27,4 +27,15 @@ export class SelectionManager {
       height: maxY - minY,
     };
   }
+
+  public static getShapesInLasso(shapes: CanvasShape[], lasso: BoundingBox): CanvasShape[] {
+    return shapes.filter(
+      (s) =>
+        !s.isDeleted &&
+        s.x >= lasso.x &&
+        s.x + s.width <= lasso.x + lasso.width &&
+        s.y >= lasso.y &&
+        s.y + s.height <= lasso.y + lasso.height
+    );
+  }
 }
