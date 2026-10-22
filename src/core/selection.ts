@@ -46,4 +46,42 @@ export class SelectionManager {
       y: s.y + dy,
     }));
   }
+
+  /**
+   * Filter shapes that either intersect or are contained inside a lasso box
+   */
+  public static getShapesIntersectingLasso(shapes: CanvasShape[], lasso: BoundingBox): CanvasShape[] {
+    return shapes.filter(
+      (s) =>
+        !s.isDeleted &&
+        s.x < lasso.x + lasso.width &&
+        s.x + s.width > lasso.x &&
+        s.y < lasso.y + lasso.height &&
+        s.y + s.height > lasso.y
+    );
+  }
+
+  /**
+   * Check if a point hits a specific canvas shape (accounting for shape type)
+   */
+  public static isShapeHit(shape: CanvasShape, point: Point): boolean {
+    if (shape.isDeleted) return false;
+    if (shape.type === 'ellipse') {
+      const rx = Math.abs(shape.width / 2);
+      const ry = Math.abs(shape.height / 2);
+      if (rx === 0 || ry === 0) return false;
+      const cx = shape.x + shape.width / 2;
+      const cy = shape.y + shape.height / 2;
+      const normalized = Math.pow((point.x - cx) / rx, 2) + Math.pow((point.y - cy) / ry, 2);
+      return normalized <= 1.0;
+    }
+
+    // Default to rectangular AABB hit test
+    return (
+      point.x >= shape.x &&
+      point.x <= shape.x + shape.width &&
+      point.y >= shape.y &&
+      point.y <= shape.y + shape.height
+    );
+  }
 }
