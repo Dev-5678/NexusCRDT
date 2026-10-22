@@ -54,3 +54,52 @@ export class HybridTransportCoordinator {
     return this.mode;
   }
 }
+
+export interface PeerHeartbeatEntry {
+  peerId: string;
+  lastHeartbeat: number;
+}
+
+export class PeerHeartbeatTracker {
+  private peers: Map<string, number> = new Map();
+  private timeoutMs: number;
+
+  constructor(timeoutMs: number = 10000) {
+    this.timeoutMs = timeoutMs;
+  }
+
+  public recordHeartbeat(peerId: string, timestamp: number = Date.now()): void {
+    this.peers.set(peerId, timestamp);
+  }
+
+  public isPeerAlive(peerId: string, now: number = Date.now()): boolean {
+    const last = this.peers.get(peerId);
+    if (last === undefined) return false;
+    return now - last <= this.timeoutMs;
+  }
+
+  public evictStalePeers(now: number = Date.now()): string[] {
+    const evicted: string[] = [];
+    for (const [peerId, last] of this.peers.entries()) {
+      if (now - last > this.timeoutMs) {
+        evicted.push(peerId);
+        this.peers.delete(peerId);
+      }
+    }
+    return evicted;
+  }
+
+  public getActivePeers(now: number = Date.now()): string[] {
+    const active: string[] = [];
+    for (const [peerId, last] of this.peers.entries()) {
+      if (now - last <= this.timeoutMs) {
+        active.push(peerId);
+      }
+    }
+    return active;
+  }
+
+  public getPeerCount(): number {
+    return this.peers.size;
+  }
+}
