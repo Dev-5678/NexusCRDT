@@ -145,4 +145,7 @@ Licensed under the [MIT License](LICENSE).
 - **Spatial Geometry & Bounding Box Engine:** Axis-aligned bounding box (AABB) intersection tests, multi-shape lasso selection containment, and ellipse collision queries.
 - **Focal Point Viewport Transforms:** Seamless pinch-to-zoom and pan transformations preserving invariant world coordinates under user focal anchors.
 - **Mesh Node Eviction & Heartbeat Decay:** Autonomous tracking of active peer heartbeats with deterministic eviction of stale peers during network partition events.
+- **Causal Tombstone Garbage Collector:** Vector-clock-aware pruning engine that cleans up deleted shapes once acknowledged across all peer vector clocks, preventing unbounded memory growth.
+- **Catmull-Rom Spline Cursor Interpolator:** Dead reckoning and cubic spline trajectory generation for 60fps remote collaborator cursors across high-latency WebRTC streams.
+- **Canvas Snapshot Serializer:** Standalone SVG markup generator and structured JSON snapshot exporter with metadata preservation.
 
