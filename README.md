@@ -1,4 +1,4 @@
-# ?? NexusCRDT // Distributed Real-Time Collaborative Canvas Engine
+# 🌐 NexusCRDT // Distributed Real-Time Collaborative Canvas Engine
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-amber.svg)](LICENSE)
 [![TypeScript: Strict](https://img.shields.io/badge/TypeScript-5.x%20Strict-blue.svg)](https://www.typescriptlang.org/)
@@ -10,7 +10,7 @@
 
 ---
 
-## ?? Architectural Topology
+## ⚡ Architectural Topology
 
 ```mermaid
 graph TD
@@ -46,7 +46,7 @@ graph TD
 
 ---
 
-## ?? Mathematical CRDT Foundations
+## 🧮 Mathematical CRDT Foundations
 
 NexusCRDT guarantees **Strong Eventual Consistency (SEC)** under unordered, partitioned, or lossy networks through a state-based bounded semilattice $(\mathcal{S}, \sqcup)$:
 
@@ -83,7 +83,7 @@ Simulated across an uncoordinated 10-node mesh executing 25,000 concurrent mutat
 
 ---
 
-## ?? Quickstart & Execution
+## 🚀 Quickstart & Execution
 
 ### Prerequisites
 - Node.js `v18.x`, `v20.x`, or `v22.x`
@@ -120,7 +120,7 @@ npm start
 
 ---
 
-## ??? Engineering Stack
+## 🛠️ Engineering Stack
 
 - **Runtime & Language:** Node.js, TypeScript 5.3 (Strict Mode)
 - **State Synchronization:** State-based CRDTs, Vector Clocks, LWW-Registers
@@ -130,9 +130,9 @@ npm start
 
 ---
 
-## ?? License & Attribution
+## 📄 License & Attribution
 
-Designed and engineered with ?? by **[Dev Jangid](https://github.com/Dev-5678)**.  
+Designed and engineered by **[Dev Jangid](https://github.com/Dev-5678)**.  
 Licensed under the [MIT License](LICENSE).
 
 ---
