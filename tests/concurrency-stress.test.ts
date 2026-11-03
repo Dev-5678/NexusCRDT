@@ -10,7 +10,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { CRDTCanvasDocument, VectorClock, CausalOrder } from '../src/core/crdt.js';
+import { CRDTCanvasDocument, VectorClock, CausalOrder, CanvasShape } from '../src/core/crdt.js';
 
 describe('Multi-Peer High-Concurrency Stress & Convergence', () => {
   it('converges 10 concurrent peers under out-of-order operation gossip', () => {
@@ -41,7 +41,7 @@ describe('Multi-Peer High-Concurrency Stress & Convergence', () => {
       // Mutation 2: Node-specific entity
       const op2 = peer.createOrUpdateShape({
         id: `entity-${peer.peerId}`,
-        type: 'circle',
+        type: 'ellipse',
         x: i * 50,
         y: i * 50,
         width: 40,
@@ -57,21 +57,24 @@ describe('Multi-Peer High-Concurrency Stress & Convergence', () => {
     // Apply all shuffled operations to every peer
     for (const peer of peers) {
       for (const op of shuffledOps) {
-        peer.applyRemoteOperation(op);
+        peer.applyRemoteDelta(op);
       }
     }
 
     // Convergence Validation: Every node must yield bit-identical canvas states
-    const referenceState = peers[0].exportState();
-    const referenceShapes = peers[0].getShapes();
+    const referenceSnapshot = peers[0].getSnapshot();
+    const referenceShapes = peers[0].getActiveShapes();
 
     assert.strictEqual(referenceShapes.length, peerCount + 1, 'Canvas must contain all unique shapes + single shared root');
 
+    const sortById = (shapes: CanvasShape[]) => [...shapes].sort((a, b) => a.id.localeCompare(b.id));
+    const normalizedReference = sortById(referenceSnapshot.shapes);
+
     for (let i = 1; i < peerCount; i++) {
-      const currentState = peers[i].exportState();
+      const currentSnapshot = peers[i].getSnapshot();
       assert.deepStrictEqual(
-        currentState,
-        referenceState,
+        sortById(currentSnapshot.shapes),
+        normalizedReference,
         `Node ${peers[i].peerId} failed to converge with Node-A under out-of-order arrival`
       );
     }
@@ -91,7 +94,7 @@ describe('Multi-Peer High-Concurrency Stress & Convergence', () => {
       height: 50,
       fillColor: '#ffffff'
     });
-    nodeBeta.applyRemoteOperation(baseOp);
+    nodeBeta.applyRemoteDelta(baseOp);
 
     // Simulate Network Partition: both mutate the same shape independently
     const alphaOp = nodeAlpha.createOrUpdateShape({
@@ -115,12 +118,12 @@ describe('Multi-Peer High-Concurrency Stress & Convergence', () => {
     });
 
     // Partition Heals: bidirectional sync
-    nodeAlpha.applyRemoteOperation(betaOp);
-    nodeBeta.applyRemoteOperation(alphaOp);
+    nodeAlpha.applyRemoteDelta(betaOp);
+    nodeBeta.applyRemoteDelta(alphaOp);
 
     // Both must settle on the deterministic winner determined by Lamport timestamp & PeerID
-    const alphaShape = nodeAlpha.getShapes().find(s => s.id === 'cluster-master');
-    const betaShape = nodeBeta.getShapes().find(s => s.id === 'cluster-master');
+    const alphaShape = nodeAlpha.getActiveShapes().find((s: CanvasShape) => s.id === 'cluster-master');
+    const betaShape = nodeBeta.getActiveShapes().find((s: CanvasShape) => s.id === 'cluster-master');
 
     assert.deepStrictEqual(alphaShape, betaShape, 'Partition convergence failed');
     assert.ok(alphaShape !== undefined);

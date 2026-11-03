@@ -20,6 +20,7 @@ describe('Delta Operation Wire Codec & Compression Efficiency', () => {
       opId: 'op_88921_alpha',
       peerId: 'peer_node_east',
       timestamp: 1729890000123,
+      vectorClock: { peer_node_east: 12 },
       type: 'UPSERT_SHAPE',
       payload: {
         id: 'shape-rect-901',
@@ -47,13 +48,18 @@ describe('Delta Operation Wire Codec & Compression Efficiency', () => {
       opId: 'dense_transform_vector_001',
       peerId: 'peer_node_tokyo_apac',
       timestamp: Date.now(),
+      vectorClock: { peer_node_tokyo_apac: 48 },
       type: 'UPSERT_SHAPE',
       payload: {
         id: 'dense-path-node-xyz',
-        type: 'polyline',
+        type: 'rectangle',
         x: 100,
         y: 100,
-        points: Array.from({ length: 50 }, (_, i) => ({ x: i * 2.5, y: i * 3.1 }))
+        width: 450,
+        height: 250,
+        strokeColor: '#3b82f6',
+        fillColor: 'rgba(59, 130, 246, 0.25)',
+        text: 'Node-Tokyo-Dense-Vector-Payload-Stream-4892'
       }
     };
 

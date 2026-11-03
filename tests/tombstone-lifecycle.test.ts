@@ -38,7 +38,7 @@ describe('Tombstone Lifecycle & High-Volume Compaction', () => {
 
       // Entities 0-499 deleted at clock seq <= 50; 500-999 deleted at clock seq > 50
       const seq = i < 500 ? 25 : 100;
-      pruner.registerTombstone(id, new VectorClock({ 'peer-1': seq, 'peer-2': seq }));
+      pruner.registerTombstone(id, new VectorClock({ 'peer-1': seq, 'peer-2': seq }), 1700000000 + i);
     }
 
     // Both peers acknowledge up to sequence 50
@@ -46,7 +46,7 @@ describe('Tombstone Lifecycle & High-Volume Compaction', () => {
     pruner.recordPeerAck('peer-2', new VectorClock({ 'peer-1': 50, 'peer-2': 50 }));
 
     // Execute causal compaction sweep
-    const metrics = pruner.pruneTombstones(['peer-1', 'peer-2'], mockEntities);
+    const metrics = pruner.prune(['peer-1', 'peer-2'], mockEntities);
 
     // Exactly 500 tombstones must be safely purged (seq <= 50)
     assert.strictEqual(metrics.tombstonesPurged, 500, 'Must purge exactly 500 causally stable tombstones');
@@ -62,18 +62,21 @@ describe('Tombstone Lifecycle & High-Volume Compaction', () => {
     mockEntities.set(targetId, {
       shape: {
         id: targetId,
-        type: 'circle',
+        type: 'ellipse',
         x: 100,
         y: 100,
         width: 30,
         height: 30,
+        strokeColor: '#10b981',
+        strokeWidth: 2,
+        zIndex: 1,
         fillColor: '#10b981',
         isDeleted: true
-      } as CanvasShape
+      }
     });
 
     // Registered deletion at causal clock (peer-A: 10)
-    pruner.registerTombstone(targetId, new VectorClock({ 'peer-A': 10 }));
+    pruner.registerTombstone(targetId, new VectorClock({ 'peer-A': 10 }), 1700000000);
 
     // Outdated incoming message at clock (peer-A: 4) attempts to resurrect entity
     const incomingClock = new VectorClock({ 'peer-A': 4 });
